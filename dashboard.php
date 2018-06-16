@@ -1,39 +1,27 @@
 <?php
-  session_start();
-  include_once "db.php"
+  include_once "db.php";
+  $page_title = "Dashboard";
+  include_once $_SERVER['DOCUMENT_ROOT'] . "/web-assets/tpl/app_header.php";
 ?>
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-  <!-- Required meta tags always come first -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>Dashbaord</title>
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/css/bootstrap.min.css" integrity="sha384-y3tfxAZXuh4HwSYylfB+J125MxIs6mR5FOHamPBG064zB+AFeWH94NdvaCBm8qnd" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
-</head>
-
-<body>
-  <div class="container-fluid">
     <div class="card col-md-8">
       <div class="card-header">Chapter Members</div>
       <div class="card-body">
         <?php
+	  $bdpa_chapter_key = $_SESSION['bdpa_chapter_key'];
           $sql = <<<SQL
-            SELECT * FROM profiles WHERE bdpa_chapter_key = 2;
+            SELECT * FROM profiles WHERE bdpa_chapter_key = $bdpa_chapter_key;
 SQL;
           $chaptersql = <<<CHSQL
-            SELECT * FROM bdpa_chapters WHERE bdpa_chapter_key = 2;
+            SELECT * FROM bdpa_chapters WHERE bdpa_chapter_key = $bdpa_chapter_key;
 CHSQL;
         $result = $conn->query($sql);
         $chapterresult = $conn->query($chaptersql);
-
-        while ($row = $result->fetch_assoc()) {
-          echo "Name: " . $row['first_name'] . " " . $row['last_name'] . "<hr>";
+		
+	while ($row = $result->fetch_assoc()) {
+	  echo "Name: " . $row['first_name'] . " " . $row['last_name'] . "<hr>";
         }
+	
         ?>
       </div>
     </div>
