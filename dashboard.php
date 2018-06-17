@@ -1,55 +1,84 @@
 <?php
-  include_once "db.php";
-  $page_title = "Dashboard";
-  include_once $_SERVER['DOCUMENT_ROOT'] . "/web-assets/tpl/app_header.php";
-?>
+$page_title = "BDPA Net";
 
-    <div class="card col-md-8">
-      <div class="card-header">Chapter Members</div>
-      <div class="card-body">
-        <?php
-	  $bdpa_chapter_key = $_SESSION['bdpa_chapter_key'];
-          $sql = <<<SQL
-            SELECT * FROM profiles WHERE bdpa_chapter_key = $bdpa_chapter_key;
-SQL;
-          $chaptersql = <<<CHSQL
-            SELECT * FROM bdpa_chapters WHERE bdpa_chapter_key = $bdpa_chapter_key;
-CHSQL;
-        $result = $conn->query($sql);
-        $chapterresult = $conn->query($chaptersql);
-		
-	while ($row = $result->fetch_assoc()) {
-	  echo "Name: " . $row['first_name'] . " " . $row['last_name'] . "<hr>";
-        }
-	
-        ?>
+if ( isset($_SESSION['user_id']) ) {
+  $user_id = $_SESSION['user_id'];
+} else {
+  $user_id = null;
+}
+
+$sql = <<<HereDoc
+select
+  a.first_name,
+  a.last_name,
+  a.phone,
+  a.email,
+  a.current_job,
+  a.bdpa_chapter_key,
+  b.bdpa_chapter_name
+from bdpanet_profiles a
+left join bdpanet_bdpa_chapters b on a.bdpa_chapter_key = b.bdpa_chapter_key
+where user_id = '$user_id'
+
+HereDoc;
+
+if ( !$sth = mysqli_query($dbh,$sql) ) { errorHandler(mysqli_error($dbh), $sql, 0); return; }
+
+if ( mysqli_num_rows($sth) > 0 ) {
+
+  # this block happens when we find at least one record for this applicant in the database..
+
+  while ($row = mysqli_fetch_array($sth)) {
+    foreach( $row AS $key => $val ) {
+      $$key = stripslashes($val);
+    }
+    # set the user_id in the session..
+    $_SESSION['user_id'] = $user_id;
+
+    echo <<<HereDoc
+
+    <div class="card">
+      <div class="card-header bg-primary text-white">Welcome $first_name <span class="float-right"><a class="text-white" title="Sign Out" href="/networking_app/?w=logout"><i class="fa fa-sign-out fa-lg"></i></a></div>
+        <div class="card-body clickable-row glow" data-href="/networking_app/?w=profile_f">
+          <address>
+          $first_name $last_name <span class="float-right fa fa-lg fa-pencil"></span><br/>
+          <small>$email</small><br/>
+          $bdpa_chapter_name<br/>
+          </address>
+        </div>
+    </div><br/>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="float-left">BDPA Network Members</h2>
+        <span class="float-right">
+
+HereDoc;
+
+        bdpaChapterSW($bdpa_chapter_key);
+
+    echo <<<HereDoc
+        </span>
       </div>
-    </div>
-    <div class="card col-md-4">
-      <div class="card-header">My Profile <a href="forms/profile_form.php" style="float: right">Edit</a></div>
-      <div class="card-body">
-      <?php
-        $username = $_SESSION['username'];
-        $profilesql = <<<SQL
-          SELECT * FROM profiles WHERE user_id="$username";
-SQL;
-        $profileresult = $conn->query($profilesql);
+      <div id="chapter_members" class="card-body">
+HereDoc;
 
-        while ($row = $profileresult->fetch_assoc()) {
-          echo "Username: " . $row['user_id'] .
-              "<hr> Email: " . $row['email'] .
-              "<hr> Phone: " . $row['phone'] .
-              "<hr> Current Job: " . $row['current_job'] .
-              "<hr> Years Participated" . $row['years_participated'];
-        }
-      ?>
+    getChapterMembers($bdpa_chapter_key);
+    echo <<<HereDoc
       </div>
     </div>
 
   </div>
-  <!-- jQuery first, then Bootstrap JS. -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/js/bootstrap.min.js" integrity="sha384-vZ2WRJMwsjRMW/8U7i6PWi6AlO1L79snBrmgiDpgIWJ82z8eA5lenwvxbMV1PAh7" crossorigin="anonymous"></script>
-</body>
 
-</html>
+HereDoc;
+  }
+} else {
+
+  # profile was not found in the databse, so let us present the profile form (new case):
+
+  $_SESSION['user_id'] = null;
+  profileForm();
+}
+
+
+

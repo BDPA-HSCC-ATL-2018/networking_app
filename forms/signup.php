@@ -1,7 +1,4 @@
-<?php
-  include_once "../db.php";
-  session_start();
-?>
+<?php include_once "../db.php" ?>
 
 <!DOCTYPE html>
 <html lang="en">
